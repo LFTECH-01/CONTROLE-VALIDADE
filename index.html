@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validade Pro Cloud + Nome</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --dark: #2c3e50;
+            --excel: #1d6f42;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .auth-box { padding: 10px; text-align: center; }
+        .hidden { display: none !important; }
+        h2 { text-align: center; color: var(--dark); margin-bottom: 20px; font-weight: 800; font-size: 1.4rem; }
+        .db-section { background: #f8f9fa; border: 2px dashed #cbd5e0; padding: 12px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; border: 3px solid var(--primary); }
+        input, button { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+        .btn-primary { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-success { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-excel { background: var(--excel); color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-danger { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 5px; }
+        .btn-stop { background: var(--danger); color: white; border: none; display: none; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .item { background: #fff; border-left: 6px solid var(--success); padding: 12px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .vencido { border-left-color: var(--danger) !important; background: #fff5f5; }
+        .alerta { border-left-color: var(--warning) !important; background: #fffdf2; }
+        .badge { font-size: 11px; padding: 4px 8px; border-radius: 8px; text-transform: uppercase; font-weight: 700; background: #eee; }
+        .vencido .badge { background: var(--danger); color: white; }
+        .alerta .badge { background: var(--warning); color: #856404; }
+        .btn-del { width: auto; background: #fee2e2; color: var(--danger); padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; }
+        .user-info { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🛒 CONTROLE PRO CLOUD</h2>
+
+    <div id="auth-section" class="auth-box">
+        <div id="register-fields" class="hidden">
+            <input type="text" id="nome_usuario" placeholder="Nome de Usuário (para cadastro)">
+        </div>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="senha" placeholder="Senha">
+        
+        <button id="btn-login" class="btn-primary">ENTRAR</button>
+        <button id="btn-toggle-reg" class="btn-outline">NÃO TENHO CONTA (CADASTRAR)</button>
+        <button id="btn-cadastrar" class="btn-success hidden">FINALIZAR CADASTRO</button>
+        <button id="btn-back-login" class="btn-outline hidden">VOLTAR AO LOGIN</button>
+    </div>
+
+    <div id="app-section" class="hidden">
+        <div class="user-info">
+            <span>👋 Olá, <span id="display-user-name"></span></span>
+            <button id="btn-logout" style="width:auto; padding: 4px 8px; font-size: 11px;">Sair</button>
+        </div>
+
+        <div class="db-section">
+            <label style="font-weight: bold; font-size: 13px;">📂 Banco Local (CSV)</label>
+            <input type="file" id="csvFile" accept=".csv" onchange="importarBancoDados(this)" style="font-size: 11px;">
+            <div id="statusDB" style="font-size: 11px; color: #666; margin-top: 4px;">Banco off-line.</div>
+        </div>
+        
+        <button class="btn-primary" id="btnScan" onclick="iniciarLeitor()">📷 ESCANEAR CÓDIGO</button>
+        <button class="btn-stop" id="btnStop" onclick="pararLeitor()">❌ CANCELAR</button>
+        <div id="reader"></div>
+
+        <form id="formEstoque">
+            <input type="text" id="codigo" placeholder="Código de Barras" required>
+            <input type="text" id="descricao" placeholder="Nome do Produto" required>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1.5;"><input type="date" id="validade" required></div>
+                <div style="flex: 1;"><input type="number" id="quantidade" placeholder="Qtd" min="1" required></div>
+            </div>
+            <button type="submit" class="btn-success">SALVAR NA NUVEM</button>
+        </form>
+
+        <button onclick="exportarExcel()" class="btn-excel">📊 EXPORTAR PARA EXCEL (.XLSX)</button>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-size: 16px; margin: 0;">📦 Itens Coletados (<span id="countItens">0</span>)</h3>
+            <button onclick="limparTudoFirebase()" class="btn-danger" style="width: auto; padding: 5px 15px;">🗑️ LIMPAR TUDO</button>
+        </div>
+        
+        <div id="listaProdutos">Carregando estoque...</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBH4hDVSqv7enMugPWUaM9CksO4F1yKvuQ",
+        authDomain: "controle-de-validade-3e66a.firebaseapp.com",
+        projectId: "controle-de-validade-3e66a",
+        storageBucket: "controle-de-validade-3e66a.firebasestorage.app",
+        messagingSenderId: "163605465156",
+        appId: "1:163605465156:web:8f7728cbf73e6bf6265411"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- LÓGICA DE INTERFACE DE LOGIN ---
+    const btnToggleReg = document.getElementById('btn-toggle-reg');
+    const btnBackLogin = document.getElementById('btn-back-login');
+    const registerFields = document.getElementById('register-fields');
+    const btnLogin = document.getElementById('btn-login');
+    const btnCadastrar = document.getElementById('btn-cadastrar');
+
+    btnToggleReg.onclick = () => {
+        registerFields.classList.remove('hidden');
+        btnCadastrar.classList.remove('hidden');
+        btnBackLogin.classList.remove('hidden');
+        btnLogin.classList.add('hidden');
+        btnToggleReg.classList.add('hidden');
+    };
+
+    btnBackLogin.onclick = () => {
+        registerFields.classList.add('hidden');
+        btnCadastrar.classList.add('hidden');
+        btnBackLogin.classList.add('hidden');
+        btnLogin.classList.remove('hidden');
+        btnToggleReg.classList.remove('hidden');
+    };
+
+    // --- AUTENTICAÇÃO ---
+    btnLogin.onclick = () => {
+        signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value)
+            .catch(err => alert("Erro ao entrar: " + err.message));
+    };
+
+    btnCadastrar.onclick = () => {
+        const nome = document.getElementById('nome_usuario').value;
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+
+        if(!nome) return alert("Por favor, digite um nome de usuário.");
+
+        createUserWithEmailAndPassword(auth, email, senha)
+            .then((userCredential) => {
+                // Salva o Nome no perfil do Firebase
+                updateProfile(userCredential.user, { displayName: nome })
+                .then(() => {
+                    alert("Conta criada com sucesso, " + nome + "!");
+                    location.reload(); // Recarrega para aplicar o nome
+                });
+            })
+            .catch(err => alert("Erro ao cadastrar: " + err.message));
+    };
+
+    document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
+            // Mostra o Nome (DisplayName), se não houver, mostra o email
+            document.getElementById('display-user-name').innerText = user.displayName || user.email;
+            carregarEstoqueFirebase(user.uid);
+            atualizarStatusDB();
+        } else {
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+        }
+    });
+
+    // --- RESTANTE DAS FUNÇÕES (SCANNER, CSV, FIREBASE) ---
+    // (Mantidas exatamente como na versão anterior)
+    let bancoProdutos = JSON.parse(localStorage.getItem('banco_produtos')) || {};
+    let listaAtualParaExportar = [];
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function tocarBipe() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = 880; gain.gain.value = 0.1;
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    window.importarBancoDados = (input) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lines = e.target.result.split(/\r?\n/);
+            lines.forEach(line => {
+                const cols = line.split(/[;,]/);
+                if (cols.length >= 2) {
+                    const ean = cols[0].trim().replace(/"/g, '');
+                    const nome = cols[1].trim().replace(/"/g, '');
+                    if(ean && ean.toLowerCase() !== "ean") bancoProdutos[ean] = nome;
+                }
+            });
+            localStorage.setItem('banco_produtos', JSON.stringify(bancoProdutos));
+            atualizarStatusDB();
+            alert("Banco Local Carregado!");
+        };
+        reader.readAsText(input.files[0], 'UTF-8');
+    };
+
+    function atualizarStatusDB() {
+        const total = Object.keys(bancoProdutos).length;
+        document.getElementById('statusDB').innerText = total > 0 ? `✅ ${total} produtos no banco local.` : "❌ Sem banco local.";
+    }
+
+    let html5QrCode;
+    window.iniciarLeitor = async () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('btnScan').style.display = 'none';
+        document.getElementById('btnStop').style.display = 'block';
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
+            document.getElementById('codigo').value = text;
+            if(bancoProdutos[text]) {
+                document.getElementById('descricao').value = bancoProdutos[text];
+                setTimeout(() => document.getElementById('validade').focus(), 300);
+            }
+            pararLeitor();
+            tocarBipe();
+        }).catch(err => alert(err));
+    };
+
+    window.pararLeitor = () => {
+        if(html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('btnScan').style.display = 'block';
+                document.getElementById('btnStop').style.display = 'none';
+            });
+        }
+    };
+
+    document.getElementById('formEstoque').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await addDoc(collection(db, "estoque"), {
+                uid: auth.currentUser.uid,
+                codigo: document.getElementById('codigo').value,
+                descricao: document.getElementById('descricao').value,
+                validade: document.getElementById('validade').value,
+                quantidade: document.getElementById('quantidade').value,
+                criadoEm: Date.now()
+            });
+            e.target.reset();
+            document.getElementById('codigo').focus();
+        } catch (err) { alert(err.message); }
+    };
+
+    function carregarEstoqueFirebase(uid) {
+        const q = query(collection(db, "estoque"), where("uid", "==", uid));
+        onSnapshot(q, (snapshot) => {
+            const lista = document.getElementById('listaProdutos');
+            document.getElementById('countItens').innerText = snapshot.size;
+            lista.innerHTML = '';
+            listaAtualParaExportar = [];
+            snapshot.forEach(d => {
+                const data = d.data();
+                listaAtualParaExportar.push({ ID: d.id, Codigo: data.codigo, Descricao: data.descricao, Validade: data.validade, Quantidade: data.quantidade });
+            });
+            const itensOrdenados = [...listaAtualParaExportar].sort((a,b) => new Date(a.Validade) - new Date(b.Validade));
+            itensOrdenados.forEach((p) => {
+                const hoje = new Date(); hoje.setHours(0,0,0,0);
+                const dVenc = new Date(p.Validade + "T00:00:00");
+                const dias = Math.ceil((dVenc - hoje) / 86400000);
+                const status = dias < 0 ? 'vencido' : (dias <= 15 ? 'alerta' : '');
+                const label = dias < 0 ? 'VENCIDO' : (dias === 0 ? 'HOJE' : `${dias} dias`);
+                const div = document.createElement('div');
+                div.className = `item ${status}`;
+                div.innerHTML = `
+                    <div><strong>${p.Descricao}</strong><br><small>${p.Codigo} | Qtd: ${p.Quantidade}</small></div>
+                    <div style="text-align:right"><span class="badge">${label}</span><br><button class="btn-del" onclick="window.excluirItem('${p.ID}')">✕</button></div>`;
+                lista.appendChild(div);
+            });
+        });
+    }
+
+    window.excluirItem = (id) => { if(confirm("Excluir item?")) deleteDoc(doc(db, "estoque", id)); };
+
+    window.limparTudoFirebase = async () => {
+        if (listaAtualParaExportar.length === 0) return alert("A lista já está vazia.");
+        if (confirm(`Apagar todos os ${listaAtualParaExportar.length} itens?`)) {
+            const q = query(collection(db, "estoque"), where("uid", "==", auth.currentUser.uid));
+            const querySnapshot = await getDocs(q);
+            const promessas = querySnapshot.docs.map(d => deleteDoc(doc(db, "estoque", d.id)));
+            await Promise.all(promessas);
+            alert("Limpo!");
+        }
+    };
+
+    window.exportarExcel = () => {
+        if (listaAtualParaExportar.length === 0) return alert("Vazio!");
+        const wb = XLSX.utils.book_new();
+        const dadosFormatados = listaAtualParaExportar.map(({ID, ...resto}) => resto);
+        const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+        XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+        XLSX.writeFile(wb, `Estoque_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+</script>
+</body>
+</html>

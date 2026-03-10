@@ -1,6 +1,6 @@
 {
-  "name": "Validade Pro Cloud",
-  "short_name": "ValidadePro",
+  "name": "Web Validade",
+  "short_name": "Web Validade",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",

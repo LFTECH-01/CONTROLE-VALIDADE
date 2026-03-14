@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Validade</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <div id="auth-section">
+        <img src="logo512x512.png" alt="Logo" class="logo-login">
+        <div class="auth-form-container">
+            <div id="register-fields" class="hidden">
+                <input type="text" id="nome_usuario" placeholder="Nome de Usuário">
+            </div>
+            <input type="email" id="email" placeholder="✉ E-mail">
+            <input type="password" id="senha" placeholder="🔒 Senha">
+            <button id="btn-login">Entrar</button>
+            <div class="auth-footer-links">
+                <p>Recuperar senha</p>
+                <p id="btn-toggle-reg">Criar conta ➔</p>
+            </div>
+            <button id="btn-cadastrar" class="btn-success hidden">FINALIZAR CADASTRO</button>
+        </div>
+    </div>
+
+    <div id="app-section" class="container hidden">
+        <img src="logo512x512.png" alt="Logo" class="logo-main">
+        
+        <div class="user-info">
+            <span>👋 <span id="display-user-name"></span></span>
+            <button id="btn-logout" style="width:auto; padding: 4px 10px;">Sair</button>
+        </div>
+
+        <button class="btn-primary" id="btnScan">📷 ESCANEAR CÓDIGO</button>
+        <div id="reader"></div>
+
+        <form id="formEstoque">
+            <input type="text" id="codigo" placeholder="Código de Barras" required>
+            <input type="text" id="descricao" placeholder="Nome do Produto" required>
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="validade" required style="flex:1.5">
+                <input type="number" id="quantidade" placeholder="Qtd" required style="flex:1">
+            </div>
+            <button type="submit" class="btn-success">SALVAR COLETA</button>
+        </form>
+
+        <button id="btnExportar" style="background:#1d6f42; color:white; border:none; font-weight:bold;">📊 EXPORTAR EXCEL</button>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <h3 style="font-size: 16px;">📦 Itens (<span id="countItens">0</span>)</h3>
+            <button id="btnLimparTudo" class="btn-danger" style="width:auto; padding:5px 10px;">🗑️ LIMPAR</button>
+        </div>
+        <div id="listaProdutos">Carregando...</div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Validade - Banco na Nuvem</title>
-    
     <link rel="stylesheet" href="style.css">
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007bff">
     
-    <link rel="icon" type="image/png" sizes="192x192" href="logo192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="logo512x512.png">
-
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -23,7 +18,9 @@
     <h2><img src="logo512x512.png" alt="Logo Web Validade"></h2>
 
     <div id="auth-section" class="auth-box">
-        <div id="register-fields" class="hidden"><input type="text" id="nome_usuario" placeholder="Nome de Usuário"></div>
+        <div id="register-fields" class="hidden">
+            <input type="text" id="nome_usuario" placeholder="Nome de Usuário">
+        </div>
         <input type="email" id="email" placeholder="E-mail">
         <input type="password" id="senha" placeholder="Senha">
         <button id="btn-login" class="btn-primary">ENTRAR</button>
@@ -77,6 +74,5 @@
 </div>
 
 <script type="module" src="script.js"></script>
-
 </body>
 </html>

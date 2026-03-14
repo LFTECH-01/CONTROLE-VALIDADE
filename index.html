@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Validade - Banco na Nuvem</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="logo192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="logo512x512.png">
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2><img src="logo512x512.png" alt="Logo Web Validade"></h2>
+
+    <div id="auth-section" class="auth-box">
+        <div id="register-fields" class="hidden"><input type="text" id="nome_usuario" placeholder="Nome de Usuário"></div>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="senha" placeholder="Senha">
+        <button id="btn-login" class="btn-primary">ENTRAR</button>
+        <button id="btn-toggle-reg" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:14px;">Não tenho conta? Cadastrar</button>
+        <button id="btn-cadastrar" class="btn-success hidden">FINALIZAR CADASTRO</button>
+    </div>
+
+    <div id="app-section" class="hidden">
+        <div class="user-info">
+            <span>👋 Olá, <span id="display-user-name"></span></span>
+            <button id="btn-logout" style="width:auto; padding: 4px 8px; font-size: 11px;">Sair</button>
+        </div>
+
+        <div class="db-section">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: bold; font-size: 13px;">☁️ Banco de Dados</span>
+                <span id="statusCloud" class="cloud-badge">Sincronizando...</span>
+            </div>
+            <details style="font-size: 11px; color: #666;">
+                <summary style="cursor:pointer">Gerenciar Banco (Importar CSV)</summary>
+                <div style="margin-top: 10px; padding: 10px; border: 1px dashed #ccc; border-radius: 8px;">
+                    <input type="file" id="csvFile" accept=".csv" style="font-size: 10px;">
+                </div>
+            </details>
+        </div>
+        
+        <button class="btn-primary" id="btnScan">📷 ESCANEAR CÓDIGO</button>
+        <button class="btn-stop-cam" id="btnStopCam">❌ CANCELAR LEITURA</button>
+        <div id="reader"></div>
+
+        <form id="formEstoque">
+            <input type="text" id="codigo" placeholder="Código de Barras" required>
+            <input type="text" id="descricao" placeholder="Nome do Produto" required>
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="validade" placeholder="Data de Validade" style="flex:1.5" required>
+                <input type="number" id="quantidade" placeholder="Qtd" style="flex:1" required>
+            </div>
+            <button type="submit" class="btn-success">SALVAR COLETA</button>
+        </form>
+
+        <button id="btnExportar" class="btn-excel">📊 EXPORTAR PARA EXCEL (.XLSX)</button>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-size: 16px; margin: 0;">📦 Itens (<span id="countItens">0</span>)</h3>
+            <button id="btnLimparTudo" class="btn-danger" style="width: auto; padding: 5px 15px; font-size: 11px;">🗑️ LIMPAR TUDO</button>
+        </div>
+        
+        <div id="listaProdutos">Carregando...</div>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
